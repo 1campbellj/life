@@ -44,7 +44,6 @@ def tick(args)
   ]
 
   if args.state.play && args.state.tick_count % 10 == 0
-    #Conway.new(dish: args.state.dish, r: args).step
     args.state.dish.step
   end
 

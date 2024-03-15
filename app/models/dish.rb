@@ -3,12 +3,14 @@ require_relative "hood"
 class Dish
   WIDTH = 1120
   HEIGHT = 720
-  attr_accessor :cells
+  attr_accessor :cells, :kill_n, :life_n
 
-  def initialize(width:)
+  def initialize(width:, kill_n: [0, 1, 4, 5, 6, 7, 8], life_n: [3] )
     cols = (WIDTH / width).round
     rows = (HEIGHT / width).round
     @cells = Array.new(rows).fill { |r| Array.new(cols).fill {|c| Cell.new(x: c, y: r, width: width ) }}
+    @kill_n = kill_n
+    @life_n = life_n
   end
 
   def [](n)
@@ -35,9 +37,9 @@ class Dish
         n = near(i, j)
         count = n.filter(&:alive?).count
         
-        if count < 2 || count > 3
+        if kill_n.include?(count)
           dup[i][j].kill
-        elsif count == 3
+        elsif life_n.include?(count)
           dup[i][j].life
         end
 

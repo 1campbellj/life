@@ -36,30 +36,49 @@ end
 def tick(args)
   args.state.dish ||= Dish.new(width: 15)
   args.state.play ||= false
+  args.state.speed ||= 8
+  args.state.mouse_down ||= false
   args.state.buttons ||= [
     Button.new(text: 'Clear', i: 0, callback: -> {clear_callback(args)}),
     Button.new(text: 'Step', i: 1, callback: -> { args.state.dish.step }),
     play_button(args),
-    reset_button(args)
+    reset_button(args),
+    Button.new(text: '>>', i: 4, callback: -> { args.state.speed -= 1 }),
+    Button.new(text: '<<', i: 5, callback: -> { args.state.speed += 1 })
   ]
 
-  if args.state.play && args.state.tick_count % 10 == 0
+  if args.state.play && args.state.tick_count % args.state.speed == 0
     args.state.dish.step
   end
 
+  # handle mouse down on buttons
   if args.inputs.mouse.down
+    args.state.mouse_down = true
     args.state.buttons.each do |b|
       b.down if args.inputs.mouse.down.inside_rect? b.primitive.first
     end
   end
 
+  # handle drawing on grid with mouse down
+  if args.state.mouse_down
+    args.state.dish.cells.each do |r|
+      r.each do |c|
+        c.life if args.inputs.mouse.inside_rect? c.primitive
+      end
+    end
+  end
+
+  # handle mouse up
   if args.inputs.mouse.up
+    args.state.mouse_down = false
+    # on cells
     args.state.dish.cells.each do |r|
       r.each do |c|
         c.toggle if args.inputs.mouse.up.inside_rect? c.primitive
       end
     end
 
+    # on buttons
     args.state.buttons.each do |b|
       if args.inputs.mouse.up.inside_rect? b.primitive.first
         b.callback&.call
@@ -76,7 +95,7 @@ def tick(args)
     args.outputs.primitives << bs.primitive
   end
 
-  args.outputs.labels << [1125, 25, "f-rate: #{args.gtk.current_framerate.round}"]
+  args.outputs.labels << [1135, 25, "f-rate: #{args.gtk.current_framerate.round}"]
 end
 
 $gtk.reset

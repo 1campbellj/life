@@ -25,6 +25,7 @@ class Dish
     cells.each do |r|
       r.each do |c|
         c.kill
+        c.shape = false
       end
     end
   end
@@ -42,7 +43,6 @@ class Dish
         elsif life_n.include?(count)
           dup[i][j].life
         end
-
       end
     end
 

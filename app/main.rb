@@ -45,13 +45,13 @@ SHAPE_MAP = {
 }
 
 def apply_shape(dish:, i:, j:, shape:)
-
   arr = SHAPE_MAP[shape]
 
   arr.each_with_index do |r, ii|
     r.each_with_index do |c, jj|
       if c == 1
         dish[i+ii][j+jj].life
+        dish[i+ii][j+jj].shape = false
       end
     end
   end
@@ -87,6 +87,35 @@ def handle_mouse_draw(args)
   end
 end
 
+def handle_draw_shape(args)
+  return unless args.state.shape
+
+  mouse_i = nil
+  mouse_j = nil
+
+  args.state.dish.cells.each_with_index do |r, i|
+    r.each_with_index do |c, j|
+      c.shape = false
+      if args.inputs.mouse.inside_rect? c.primitive
+        mouse_i = i 
+        mouse_j = j
+      end
+    end
+  end
+
+  return unless mouse_i && mouse_j
+  arr = SHAPE_MAP[args.state.shape]
+
+  dish = args.state.dish
+  arr.each_with_index do |r, ii|
+    r.each_with_index do |c, jj|
+      if c == 1 && dish[mouse_i+ii] && dish[mouse_i+ii][mouse_j+jj]
+        dish[mouse_i+ii][mouse_j+jj].shape = true
+      end
+    end
+  end
+end
+
 def tick(args)
   args.state.dish ||= Dish.new(width: 12)
   args.state.play ||= false
@@ -112,7 +141,7 @@ def tick(args)
 
   handle_mouse_down(args)
   handle_mouse_draw(args)
-
+  handle_draw_shape(args)
 
   # handle mouse up
   if args.inputs.mouse.up

@@ -23,17 +23,17 @@ class Button
   def primitive
     [
       {
-        x: WIDTH + (padding/2), 
+        x: WIDTH + padding, 
         y: HEIGHT - (height * (i + 1)) + (padding/2),
         h: height - padding,
-        w: width - padding, 
+        w: width - 2*padding, 
         r: state == :up ? 128 : 40,
         g: state == :up ? 128 : 40,
         b: state == :up ? 128 : 40,
         primitive_marker: :solid
       },
       {
-        x: WIDTH + padding,
+        x: WIDTH + padding + 5,
         y: HEIGHT - (height * i) - padding,
         text: text,
         r: state == :up ? 0 : 255,

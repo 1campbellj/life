@@ -1,23 +1,32 @@
 class Button
   WIDTH = 1120
   HEIGHT = 720
-  attr_accessor :text, :i, :width, :height, :padding, :callback, :state
-  def initialize(text:, i:, state: :up, callback: nil)
+  attr_accessor :args, :text, :i, :width, :height, :padding, :callback, :state
+  def initialize(args:, text:, i:, callback: nil)
+    @args = args
     @text = text
     @i = i 
     @width = 160
     @height = 40
     @padding = 10
     @callback = callback
-    @state = state
   end
 
-  def down
-    self.state = :down
-  end
+  def state
+    box = 
+      {
+        x: WIDTH + padding, 
+        y: HEIGHT - (height * (i + 1)) + (padding/2),
+        h: height - padding,
+        w: width - 2*padding,
+        primitive_marker: :solid
+      }
 
-  def up
-    self.state = :up
+    if args.state.mouse_down && args.inputs.mouse.inside_rect?(box)
+      :down
+    else
+      :up
+    end
   end
 
   def primitive

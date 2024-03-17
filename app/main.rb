@@ -3,6 +3,7 @@
 require_relative 'models/cell'
 require_relative 'models/dish'
 require_relative 'models/button'
+require_relative 'models/bool_button'
 
 def clear_callback(args)
   args.state.dish.clear
@@ -12,24 +13,18 @@ end
 
 def play_button(args)
     i = 2
-    Button.new(text: 'Play', i: i, callback: -> { 
+    text = args.state.play ? 'Pause' : 'Play'
+    Button.new(args: args, text: text, i: i, callback: -> { 
       args.state.play = !args.state.play 
-      args.state.buttons[i] = pause_button(args)
-      args.state.saved_cells = args.state.dish.cells.map { |g| g.map(&:dup) }
-    })
-end
-
-def pause_button(args)
-    i = 2
-    Button.new(text: 'Pause', i: i, callback: -> { 
-      args.state.play = !args.state.play 
-      args.state.buttons[i] = play_button(args)
+      args.state.saved_cells = args.state.dish.cells.map { |g| g.map(&:dup) } if !args.state.play
     })
 end
 
 def reset_button(args)
-  Button.new(text: 'Reset', i: 3, callback: -> {
-    args.state.dish.cells = args.state.saved_cells
+  Button.new(args: args, text: 'Reset', i: 3, callback: -> {
+    if args.state.saved_cells
+      args.state.dish.cells = args.state.saved_cells
+    end
   })
 end
 
@@ -74,10 +69,6 @@ def handle_mouse_down(args)
 
   # handle buttons
   args.state.mouse_down = true
-  args.state.buttons.each do |b|
-    b.down if args.inputs.mouse.down.inside_rect? b.primitive.first
-  end
-
   return if args.state.shape
 
   # handle drawing on grid with mouse down
@@ -148,19 +139,23 @@ def tick(args)
   args.state.mouse_down ||= false
   args.state.shape ||= nil
   args.state.rotate ||= 0
-  args.state.buttons ||= [
-    Button.new(text: 'Clear', i: 0, callback: -> {clear_callback(args)}),
-    Button.new(text: 'Step', i: 1, callback: -> { args.state.dish.step }),
+  args.state.test ||= false
+  args.state.saved_cells ||= false
+
+  args.state.buttons = [
+    Button.new(args: args, text: 'Clear', i: 0, callback: -> {clear_callback(args)}),
+    Button.new(args: args, text: 'Step', i: 1, callback: -> { args.state.dish.step }),
     play_button(args),
     reset_button(args),
-    Button.new(text: '>>', i: 4, callback: -> { args.state.speed -= 1 }),
-    Button.new(text: '<<', i: 5, callback: -> { args.state.speed += 1 }),
-    Button.new(text: '<3', i: 6, callback: -> { 
+    Button.new(args: args, text: '>>', i: 4, callback: -> { args.state.speed -= 1 }),
+    Button.new(args: args, text: '<<', i: 5, callback: -> { args.state.speed += 1 }),
+    Button.new(args: args, text: '<3', i: 6, callback: -> { 
       args.state.shape = :heart 
     }),
-    Button.new(text: 'Glider', i: 7, callback: -> { 
+    Button.new(args: args, text: 'Glider', i: 7, callback: -> { 
       args.state.shape = :glider 
-    })
+    }),
+    BoolButton.new(key: :test, args: args, text: "Test", i: 8)
   ]
 
   if args.state.play && args.state.tick_count % args.state.speed == 0
@@ -194,7 +189,6 @@ def tick(args)
     args.state.buttons.each do |b|
       if args.inputs.mouse.up.inside_rect? b.primitive.first
         b.callback&.call
-        b.up
       end
     end
   end

@@ -15,8 +15,10 @@ def play_button(args)
     i = 2
     text = args.state.play ? 'Pause' : 'Play'
     Button.new(args: args, text: text, i: i, callback: -> { 
+      # TODO fix this callback
+      # only save the state if transitioning from pause to play
       args.state.play = !args.state.play 
-      args.state.saved_cells = args.state.dish.cells.map { |g| g.map(&:dup) } if !args.state.play
+      args.state.saved_cells = args.state.dish.cells.map { |g| g.map(&:dup) } if !args.state.saved_cells
     })
 end
 
@@ -24,6 +26,7 @@ def reset_button(args)
   Button.new(args: args, text: 'Reset', i: 3, callback: -> {
     if args.state.saved_cells
       args.state.dish.cells = args.state.saved_cells
+      args.state.saved_cells = false
     end
   })
 end

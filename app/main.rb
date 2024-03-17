@@ -41,11 +41,23 @@ SHAPE_MAP = {
     [0, 1, 0, 0, 0, 1, 0],
     [0, 0, 1, 0, 1, 0, 0],
     [0, 0, 0, 1, 0, 0, 0]
-  ].reverse
+  ].reverse,
+  glider: [
+    [0, 0, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+  ]
 }
 
-def apply_shape(dish:, i:, j:, shape:)
+def apply_shape(args:, i:, j:)
+  shape = args.state.shape
+  dish = args.state.dish
+
   arr = SHAPE_MAP[shape]
+
+  args.state.rotate.times do
+    arr = arr.transpose.map(&:reverse)
+  end
 
   arr.each_with_index do |r, ii|
     r.each_with_index do |c, jj|
@@ -106,6 +118,10 @@ def handle_draw_shape(args)
   return unless mouse_i && mouse_j
   arr = SHAPE_MAP[args.state.shape]
 
+  args.state.rotate.times do
+    arr = arr.transpose.map(&:reverse)
+  end
+
   dish = args.state.dish
   arr.each_with_index do |r, ii|
     r.each_with_index do |c, jj|
@@ -116,12 +132,22 @@ def handle_draw_shape(args)
   end
 end
 
+def handle_key_down(args)
+  return unless args.inputs.keyboard.key_down
+
+  if args.inputs.keyboard.key_down.r
+    args.state.rotate += 1;
+    args.state.rotate = 0 if args.state.rotate > 3
+  end
+end
+
 def tick(args)
   args.state.dish ||= Dish.new(width: 12)
   args.state.play ||= false
   args.state.speed ||= 8
   args.state.mouse_down ||= false
   args.state.shape ||= nil
+  args.state.rotate ||= 0
   args.state.buttons ||= [
     Button.new(text: 'Clear', i: 0, callback: -> {clear_callback(args)}),
     Button.new(text: 'Step', i: 1, callback: -> { args.state.dish.step }),
@@ -131,7 +157,9 @@ def tick(args)
     Button.new(text: '<<', i: 5, callback: -> { args.state.speed += 1 }),
     Button.new(text: '<3', i: 6, callback: -> { 
       args.state.shape = :heart 
-      args.state.play = false
+    }),
+    Button.new(text: 'Glider', i: 7, callback: -> { 
+      args.state.shape = :glider 
     })
   ]
 
@@ -139,6 +167,7 @@ def tick(args)
     args.state.dish.step
   end
 
+  handle_key_down(args)
   handle_mouse_down(args)
   handle_mouse_draw(args)
   handle_draw_shape(args)
@@ -150,7 +179,7 @@ def tick(args)
       r.each_with_index do |c, j|
         if args.inputs.mouse.up.inside_rect? c.primitive
           if args.state.shape
-            apply_shape(dish: args.state.dish, i: i, j: j, shape: args.state.shape)
+            apply_shape(args: args, i: i, j: j)
             args.state.shape = nil
           else
             c.toggle if !args.state.mouse_down

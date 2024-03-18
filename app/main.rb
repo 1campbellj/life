@@ -77,7 +77,7 @@ def handle_mouse_down(args)
   # handle drawing on grid with mouse down
   args.state.dish.cells.each do |r|
     r.each do |c|
-      c.life if args.inputs.mouse.inside_rect? c.primitive
+      c.life if args.inputs.mouse.inside_rect? c
     end
   end
 end
@@ -88,7 +88,7 @@ def handle_mouse_draw(args)
 
   args.state.dish.cells.each do |r|
     r.each do |c|
-      c.life if args.inputs.mouse.inside_rect? c.primitive
+      c.life if args.inputs.mouse.inside_rect? c
     end
   end
 end
@@ -102,7 +102,7 @@ def handle_draw_shape(args)
   args.state.dish.cells.each_with_index do |r, i|
     r.each_with_index do |c, j|
       c.shape = false
-      if args.inputs.mouse.inside_rect? c.primitive
+      if args.inputs.mouse.inside_rect? c
         mouse_i = i 
         mouse_j = j
       end
@@ -137,7 +137,7 @@ end
 
 def initialize_state(args)
   args.state = args.state.merge({
-    dish: Dish.new(width: 8),
+    dish: Dish.new(width: 6),
     play: false,
     speed: 8,
     mouse_down: false,
@@ -201,7 +201,7 @@ def tick(args)
     # on cells
     args.state.dish.cells.each_with_index do |r, i|
       r.each_with_index do |c, j|
-        if args.inputs.mouse.up.inside_rect? c.primitive
+        if args.inputs.mouse.up.inside_rect? c
           if args.state.shape
             apply_shape(args: args, i: i, j: j)
             args.state.shape = nil
@@ -222,15 +222,12 @@ def tick(args)
     end
   end
 
-  args.state.dish.cells.each do |r|
-    args.outputs.primitives << r.each.map(&:primitive)
-  end
+  args.outputs.sprites << args.state.dish.cells.flatten.filter{|c| !c.path.nil?}
 
-  args.state.buttons.each do |bs|
-    args.outputs.primitives << bs.primitive
-  end
+  args.outputs.primitives << args.state.buttons.map(&:primitive)
 
-  args.outputs.labels << [1135, 25, "f-rate: #{args.gtk.current_framerate.round}"]
+  #args.outputs.labels << [1135, 25, "f-rate: #{args.gtk.current_framerate.round}"]
+  args.outputs.primitives << args.gtk.framerate_diagnostics_primitives
 end
 
 $gtk.reset

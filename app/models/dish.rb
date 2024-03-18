@@ -8,7 +8,7 @@ class Dish
   def initialize(width:, kill_n: [0, 1, 4, 5, 6, 7, 8], life_n: [3] )
     cols = (WIDTH / width).round
     rows = (HEIGHT / width).round
-    @cells = Array.new(rows).fill { |r| Array.new(cols).fill {|c| Cell.new(x: c, y: r, width: width ) }}
+    @cells = Array.new(rows).fill { |r| Array.new(cols).fill {|c| Cell.new(x: c, y: r, w: width ) }}
     @kill_n = kill_n
     @life_n = life_n
   end

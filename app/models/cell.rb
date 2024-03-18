@@ -1,15 +1,22 @@
 # frozen_string_literal: true
 
 class Cell
-  attr_accessor :x, :y, :state, :width, :shape
+  attr_sprite
+  attr_accessor :state, :shape
 
-  def initialize(x:, y:, width:)
-    @x = x
-    @y = y
+  def initialize(x:, y:, w:)
+    @x = x * w
+    @y = y * w
+    @w = w
+    @h = w
     @state = :dead
-    @width = width
     @shape = false
   end
+
+  def path
+    (alive? || shape?) ? 'sprites/live_cell.png' : nil
+  end
+
 
   def life
     @state = :alive
@@ -29,9 +36,5 @@ class Cell
 
   def shape?
     shape
-  end
-
-  def primitive
-    { x: width * @x, y: @width * @y, w: @width, h: @width, primitive_marker: (alive? || shape?) ? :solid : :border }
   end
 end

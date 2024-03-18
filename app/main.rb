@@ -135,22 +135,33 @@ def handle_key_down(args)
   end
 end
 
+def initialize_state(args)
+  args.state = args.state.merge({
+    dish: Dish.new(width: 8),
+    play: false,
+    speed: 8,
+    mouse_down: false,
+    shape: nil,
+    rotate: 0,
+    saved_cells: nil,
+    kill_n: [0, 1, 4, 5, 6, 7, 8],
+    life_n: [3],
+    conway: true,
+    changed_cells: []
+  })
+end
+
 def tick(args)
-  args.state.dish ||= Dish.new(width: 12)
-  args.state.play ||= false
-  args.state.speed ||= 8
-  args.state.mouse_down ||= false
-  args.state.shape ||= nil
-  args.state.rotate ||= 0
-  args.state.test ||= false
-  args.state.saved_cells ||= false
+  if args.state.tick_count == 0
+    initialize_state(args)
+  end
 
   args.state.buttons = [
     Button.new(args: args, text: 'Clear', i: 0, callback: -> {clear_callback(args)}),
     Button.new(args: args, text: 'Step', i: 1, callback: -> { args.state.dish.step }),
     play_button(args),
     reset_button(args),
-    Button.new(args: args, text: '>>', i: 4, callback: -> { args.state.speed -= 1 }),
+    Button.new(args: args, text: '>>', i: 4, callback: -> { args.state.speed -= 1 if args.state.speed > 1}),
     Button.new(args: args, text: '<<', i: 5, callback: -> { args.state.speed += 1 }),
     Button.new(args: args, text: '<3', i: 6, callback: -> { 
       args.state.shape = :heart 
@@ -158,8 +169,23 @@ def tick(args)
     Button.new(args: args, text: 'Glider', i: 7, callback: -> { 
       args.state.shape = :glider 
     }),
-    BoolButton.new(key: :test, args: args, text: "Test", i: 8)
+    Button.new(args: args, text: "Conway", i: 8, state_key: :conway, callback: -> {
+      args.state.conway = !args.state.conway
+      args.state.kill_n = [0, 1, 4, 5, 6, 7, 8]
+      args.state.life_n = [3]
+      args.state.seeds = false
+    }),
+    Button.new(args: args, text: "Seeds", i: 9, state_key: :seeds, callback: -> {
+      args.state.seeds = !args.state.seeds
+      args.state.kill_n = [0, 1, 3, 4, 5, 6, 7, 8]
+      args.state.life_n = [2]
+      args.state.conway = false
+
+    })
   ]
+
+  args.state.dish.kill_n = args.state.kill_n
+  args.state.dish.life_n = args.state.life_n
 
   if args.state.play && args.state.tick_count % args.state.speed == 0
     args.state.dish.step

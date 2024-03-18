@@ -1,8 +1,8 @@
 class Button
   WIDTH = 1120
   HEIGHT = 720
-  attr_accessor :args, :text, :i, :width, :height, :padding, :callback, :state
-  def initialize(args:, text:, i:, callback: nil)
+  attr_accessor :args, :text, :i, :width, :height, :padding, :callback, :state_key
+  def initialize(args:, text:, i:, callback: nil, state_key: nil)
     @args = args
     @text = text
     @i = i 
@@ -10,9 +10,14 @@ class Button
     @height = 40
     @padding = 10
     @callback = callback
+    @state_key = state_key
   end
 
   def state
+    if state_key
+      return args.state[state_key] == true ? :down : :up
+    end
+
     box = 
       {
         x: WIDTH + padding, 

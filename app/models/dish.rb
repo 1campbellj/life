@@ -1,16 +1,18 @@
 require_relative "hood"
+require_relative "set"
 
 class Dish
   WIDTH = 1120
   HEIGHT = 720
-  attr_accessor :cells, :kill_n, :life_n
+  attr_accessor :cells, :kill_n, :life_n, :args
 
-  def initialize(width:, kill_n: [0, 1, 4, 5, 6, 7, 8], life_n: [3] )
+  def initialize(args:, width:, kill_n: [0, 1, 4, 5, 6, 7, 8], life_n: [3] )
     cols = (WIDTH / width).round
     rows = (HEIGHT / width).round
-    @cells = Array.new(rows).fill { |r| Array.new(cols).fill {|c| Cell.new(x: c, y: r, w: width ) }}
+    @cells = Array.new(rows).fill { |r| Array.new(cols).fill {|c| Cell.new(args: args, x: c, y: r, w: width ) }}
     @kill_n = kill_n
     @life_n = life_n
+    @args = args
   end
 
   def [](n)
@@ -30,18 +32,30 @@ class Dish
     end
   end
 
-  def step
-    dup = cells.map { |g| g.map(&:dup) }
-    cells.each_with_index do |r, i|
-      r.each_with_index do |c, j|
+  def relevant_cells
+    args.state.changed_cells.map { |x, y|
+      near(y, x) << cells[y][x]
+    }
+  end
 
-        n = near(i, j)
-        count = n.filter(&:alive?).count
-        
-        if kill_n.include?(count)
-          dup[i][j].kill
-        elsif life_n.include?(count)
-          dup[i][j].life
+  def step
+    return unless args.state.changed_cells.length > 0
+    dup = cells.map { |g| g.map(&:dup) }
+
+    relevant = relevant_cells.flatten!
+    args.state.changed_cells = Set.new
+
+    relevant.each do |c|
+      n = near(c.dish_y, c.dish_x)
+      count = n.filter(&:alive?).count
+
+      if kill_n.include?(count)
+        if c.alive?
+          dup[c.dish_y][c.dish_x].kill
+        end
+      elsif life_n.include?(count)
+        if !c.alive?
+          dup[c.dish_y][c.dish_x].life
         end
       end
     end

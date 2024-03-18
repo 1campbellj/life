@@ -4,11 +4,13 @@ require_relative 'models/cell'
 require_relative 'models/dish'
 require_relative 'models/button'
 require_relative 'models/bool_button'
+require_relative 'models/set'
 
 def clear_callback(args)
   args.state.dish.clear
   args.state.play = false
   args.state.buttons[2] = play_button(args)
+  args.state.changed_cells = Set.new
 end
 
 def play_button(args)
@@ -137,9 +139,9 @@ end
 
 def initialize_state(args)
   args.state = args.state.merge({
-    dish: Dish.new(width: 6),
+    dish: Dish.new(args: args, width: 7),
     play: false,
-    speed: 8,
+    speed: 1,
     mouse_down: false,
     shape: nil,
     rotate: 0,
@@ -147,7 +149,7 @@ def initialize_state(args)
     kill_n: [0, 1, 4, 5, 6, 7, 8],
     life_n: [3],
     conway: true,
-    changed_cells: []
+    changed_cells: Set.new
   })
 end
 
